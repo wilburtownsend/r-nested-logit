@@ -3,7 +3,7 @@
 This repo contains an R function for drawing `nested extreme value' random variables --- i.e., those with this CDF:
 ```math
 \mathbb{P}
-\left[\left(X_{j}\right)_{j \in {J} \leq 
+\left[\left(X_{j}\right)_{j \in {J}} \leq 
 \left(x_{j}\right)_{j \in {J}}\right]
 = \exp\left(
 \sum_{c \in {C}} 
