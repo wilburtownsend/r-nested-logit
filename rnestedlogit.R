@@ -6,13 +6,18 @@ library(pracma)
 library(extraDistr)
 
 # σ should be a scalar.
-# nests should be a length-product vector of each product's nest.
-rnestedlogit = function(N, σ, nests, tol=1e-2, plot_pdf=FALSE) {
+# nests should be a length-num_products vector listing each product's nest.
+rnestedlogit = function(N, σ, nests,
+                        tol=1e-3, plot_pdf=FALSE, plot_imaginary=FALSE,
+                        lower_int = -50, upper_int = 50,
+                        lower_eval = -5, upper_eval = 10,
+                        resolution=2^15
+                        ) {
     # Check nests is a vector of integers.
     stopifnot(is.vector(nests))
     stopifnot(all(as.integer(nests) == nests))
     # Assign each nest to a sequential integer.
-    num_nests    = length(unique(nests))
+    num_nests = length(unique(nests))
     xwalk = cbind(unique(nests), 1:num_nests)
     new_nests = sapply(nests, function(nest) xwalk[which(xwalk[,1] == nest), 2])
     # Check that...
@@ -22,16 +27,16 @@ rnestedlogit = function(N, σ, nests, tol=1e-2, plot_pdf=FALSE) {
     num_products = length(new_nests)
     # Define the characteristic function.
     characteristic = function(z) gammaz(1 - 1i*z)/gammaz(1 - 1i*(1-σ)*z)
-    # Integrate to find the PDF -- should check these parameters.
-    resolution = 2^12
-    out = fourierin(f = characteristic, lower_int = -20, upper_int = 20,
-                    lower_eval = -5, upper_eval = 5,
+    # Integrate to find the PDF.
+    out = fourierin(f = characteristic, lower_int = lower_int, upper_int = upper_int,
+                    lower_eval = lower_eval, upper_eval = upper_eval,
                     const_adj = -1, freq_adj = -1, resolution = resolution)
     # Plot the pdf, if requested.
     if (plot_pdf) plot(out$w, Re(out$values))
+    if (plot_imaginary) plot(out$w, Im(out$values))
     # Check that...
     stopifnot(max(abs(Im(out$values)))                           < tol) # imaginary values are small
-    stopifnot(min(Re(out$values))                                < tol) # pdf is almost non-negative
+    stopifnot(min(Re(out$values))                                > -tol) # pdf is almost non-negative
     stopifnot(max(Re(out$values[1]), Re(out$values[resolution])) < tol) # pdf end points are zero
     # Censor negative and imaginary parts out of the pdf.
     out$values_censored = sapply(out$values, function(v) max(0, Re(v)))
